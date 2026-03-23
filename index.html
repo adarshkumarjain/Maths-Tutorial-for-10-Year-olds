@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏎️ Speed, Time & Distance — Race Academy!</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 700px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #c0392b, #e74c3c, #f39c12);
+  padding: 22px 32px 18px;
+  color: white;
+  text-align: center;
+}
+.header h1 { font-size: 1.75rem; font-weight: 900; letter-spacing: -0.5px; }
+.header p { opacity: 0.9; font-size: 0.9rem; margin-top: 4px; }
+.header-flags { font-size: 1.5rem; letter-spacing: 6px; margin-top: 6px; }
+
+/* PROGRESS */
+.progress-wrap { background: #eee; height: 6px; }
+.progress-bar {
+  height: 6px;
+  background: linear-gradient(90deg, #c0392b, #f39c12);
+  transition: width 0.5s ease;
+}
+
+.content { padding: 28px 32px; }
+
+/* ─── WELCOME SCREEN ─── */
+.welcome-title { font-size: 1.5rem; font-weight: 800; color: #1a1a2e; margin-bottom: 8px; text-align:center; }
+.welcome-sub { color: #666; text-align:center; margin-bottom: 24px; font-size: 0.95rem; }
+
+.path-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.path-card {
+  border: 2px solid #eee;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.path-card:hover { border-color: #e74c3c; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(231,76,60,0.15); }
+.path-card .card-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+.path-card h3 { font-size: 1rem; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; }
+.path-card p { font-size: 0.82rem; color: #777; line-height: 1.4; }
+.path-card.primary { background: linear-gradient(135deg, #fff5f5, #fff0e0); border-color: #f39c12; }
+
+/* ─── LEARN SCREEN ─── */
+.learn-header { text-align:center; margin-bottom: 20px; }
+.learn-header h2 { font-size: 1.4rem; font-weight: 900; color: #1a1a2e; }
+.learn-header p { color: #777; font-size: 0.9rem; margin-top: 4px; }
+
+/* TABS */
+.tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn {
+  flex: 1;
+  padding: 10px 6px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #888;
+  transition: all 0.2s;
+  min-width: 60px;
+  text-align: center;
+}
+.tab-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+.tab-btn.active { background: #e74c3c; border-color: #e74c3c; color: white; }
+
+/* CONCEPT CARD */
+.concept-card {
+  border: 2px solid #f0f0f0;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+/* ANIMATION STAGE */
+.anim-stage {
+  background: #1a1a2e;
+  height: 220px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+/* Road */
+.road {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: #34495e;
+}
+.road-line {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, #f39c12 0, #f39c12 30px, transparent 30px, transparent 60px);
+  left: 0; right: 0;
+}
+.road-marking {
+  position: absolute;
+  top: 10px;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  width: 40px;
+  transform: translateX(-50%);
+}
+/* Car */
+.car-anim {
+  position: absolute;
+  bottom: 38px;
+  font-size: 3rem;
+  transition: left 0.08s linear;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+  z-index: 10;
+}
+/* Stats overlay */
+.anim-stats {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  display: flex;
+  gap: 8px;
+}
+.stat-pill {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+}
+.stat-pill span { color: #f39c12; }
+
+/* Speedometer needle */
+.speedo-wrap {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  width: 70px;
+  height: 70px;
+}
+.speedo-wrap canvas { width: 70px; height: 70px; }
+
+/* Concept body */
+.concept-body { padding: 18px 20px; }
+.concept-body h3 { font-size: 1.05rem; font-weight: 800; color: #1a1a2e; margin-bottom: 8px; }
+.concept-body p { font-size: 0.92rem; color: #444; line-height: 1.65; margin-bottom: 10px; }
+.formula-chip {
+  display: inline-block;
+  background: #1a1a2e;
+  color: #f39c12;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+/* Audio button */
+.audio-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #f8f8f8;
+  border: 2px solid #ddd;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #444;
+  transition: all 0.2s;
+  width: fit-content;
+}
+.audio-btn:hover { border-color: #e74c3c; color: #e74c3c; background: #fff5f5; }
+.audio-btn.playing { background: #e74c3c; border-color: #e74c3c; color: white; }
+.audio-icon { font-size: 1.1rem; }
+
+/* FORMULA TRIANGLE */
+.triangle-section { padding: 4px 20px 18px; }
+.triangle-section h3 { font-size: 1rem; font-weight: 800; color: #1a1a2e; margin-bottom: 12px; }
+.triangle-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.triangle-svg-wrap { flex-shrink: 0; }
+.triangle-formulas { flex: 1; min-width: 180px; }
+.t-formula {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+.t-formula:hover { background: #fff5f5; border-color: #f39c12; }
+.t-formula.highlighted { background: #fff8e1; border-color: #f39c12; }
+.t-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.t-eq { font-family: 'Courier New', monospace; font-size: 0.9rem; font-weight: 700; color: #1a1a2e; }
+.t-label { font-size: 0.8rem; color: #888; }
+
+/* Bottom nav */
+.learn-nav { display: flex; gap: 12px; margin-top: 8px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 50px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #e74c3c, #f39c12);
+  color: white;
+  flex: 1;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231,76,60,0.35); }
+.btn-ghost {
+  background: #f0f0f0;
+  color: #666;
+  font-size: 0.85rem;
+  padding: 13px 20px;
+}
+.btn-ghost:hover { background: #e8e8e8; }
+
+/* ─── QUIZ SCREEN ─── */
+.q-num { font-size: 0.8rem; font-weight: 700; color: #e74c3c; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.q-scene {
+  background: linear-gradient(135deg, #f0f7ff, #e8f4ff);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  border-left: 4px solid #2980b9;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #1a1a2e;
+}
+.q-ask {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fffbf0;
+  border-radius: 10px;
+  border-left: 4px solid #f39c12;
+}
+.answer-label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 8px; font-weight: 600; }
+.answer-input {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 1.05rem;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  outline: none;
+  transition: border 0.2s;
+  font-family: 'Courier New', monospace;
+  color: #1a1a2e;
+}
+.answer-input:focus { border-color: #e74c3c; }
+.hint-text { font-size: 0.8rem; color: #999; margin-top: 6px; }
+
+/* Feedback */
+.feedback-box {
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 14px 0;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.feedback-box.correct { background: #f0fff4; border: 2px solid #27ae60; }
+.feedback-box.wrong { background: #fff5f5; border: 2px solid #e74c3c; }
+.fb-header {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 1rem; font-weight: 800; margin-bottom: 8px;
+}
+.feedback-box.correct .fb-header { color: #1e8449; }
+.feedback-box.wrong .fb-header { color: #c0392b; }
+.fb-icon { font-size: 1.4rem; }
+.steps-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 8px; }
+.step-row { display: flex; gap: 10px; align-items: flex-start; margin: 5px 0; font-size: 0.9rem; color: #333; line-height: 1.5; }
+.step-circle {
+  width: 20px; height: 20px; border-radius: 50%; background: #1a1a2e; color: white;
+  font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.hl { font-family: 'Courier New', monospace; background: #1a1a2e; color: #f39c12; padding: 1px 8px; border-radius: 5px; }
+
+/* SCORE SCREEN */
+.score-wrap { text-align: center; }
+.trophy-big { font-size: 5rem; display: block; animation: pop 0.5s ease; margin-bottom: 10px; }
+@keyframes pop { from{transform:scale(0)} 70%{transform:scale(1.2)} to{transform:scale(1)} }
+.score-big { font-size: 3.5rem; font-weight: 900; color: #e74c3c; line-height: 1; }
+.score-of { font-size: 0.95rem; color: #aaa; margin-bottom: 8px; }
+.score-msg { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; }
+.breakdown {
+  background: #f9f9f9; border-radius: 14px;
+  padding: 16px; margin: 14px 0; text-align: left;
+}
+.breakdown h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 10px; }
+.bd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: 0.88rem; color: #444;
+  border-bottom: 1px solid #efefef;
+}
+.bd-row:last-child { border-bottom: none; }
+
+@media(max-width:480px){
+  .content { padding: 20px; }
+  .path-cards { grid-template-columns: 1fr; }
+  .tabs { gap: 4px; }
+  .tab-btn { font-size: 0.75rem; padding: 8px 4px; }
+  .triangle-container { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🏎️ Race Academy</h1>
+    <p>Speed · Time · Distance</p>
+    <div class="header-flags">🏁 🚗 🏆</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="content" id="mainContent"></div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// SPEECH
+// ═══════════════════════════════
+let currentUtterance = null;
+let activeAudioBtn = null;
+
+function stopSpeech() {
+  window.speechSynthesis.cancel();
+  if (activeAudioBtn) {
+    activeAudioBtn.classList.remove('playing');
+    activeAudioBtn.innerHTML = '<span class="audio-icon">🔊</span> Hear it explained';
+    activeAudioBtn = null;
+  }
+  currentUtterance = null;
+}
+
+function speak(text, btn) {
+  stopSpeech();
+  if (!window.speechSynthesis) { alert("Sorry, your browser doesn't support audio."); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.88;
+  u.pitch = 1.05;
+  u.volume = 1;
+
+  // pick a friendly voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => /Samantha|Google US|Karen|Daniel|Moira/i.test(v.name));
+  if (preferred) u.voice = preferred;
+
+  u.onstart = () => {
+    btn.classList.add('playing');
+    btn.innerHTML = '<span class="audio-icon">⏹️</span> Stop audio';
+    activeAudioBtn = btn;
+  };
+  u.onend = u.onerror = () => {
+    btn.classList.remove('playing');
+    btn.innerHTML = '<span class="audio-icon">🔊</span> Hear it explained';
+    activeAudioBtn = null;
+  };
+  currentUtterance = u;
+  window.speechSynthesis.speak(u);
+}
+
+function toggleAudio(id, btn) {
+  if (activeAudioBtn === btn) { stopSpeech(); return; }
+  const scripts = {
+    speed: `Speed tells us how FAST something is moving!
+      Think of it like this — if you and your friend both ride bikes, but you reach the park first, YOU were faster!
+      Speed is measured in miles per hour, or kilometres per hour.
+      A bicycle might go 10 miles per hour. A race car can go 200 miles per hour!
+      The formula for speed is: Speed equals Distance divided by Time.
+      So if a car travels 100 miles in 2 hours, its speed is 100 divided by 2, which is 50 miles per hour!`,
+
+    distance: `Distance is HOW FAR something travels!
+      Imagine you're driving from your home to school — the number of miles on the road is the distance!
+      To find the distance, we MULTIPLY speed by time.
+      So if a racing car zooms at 60 miles per hour for 3 hours, the distance is 60 times 3, which equals 180 miles!
+      The further you go, the bigger the distance. Simple!`,
+
+    time: `Time is HOW LONG the journey takes!
+      Think of it like the countdown on a race clock — from the moment the cars GO, to when the winner crosses the finish line!
+      To find the time, we DIVIDE distance by speed.
+      So if a car needs to travel 150 miles, and it drives at 50 miles per hour, the time is 150 divided by 50, which is 3 hours.
+      Always remember: if you go faster, the time goes DOWN. If you go slower, the time goes UP!`,
+
+    triangle: `Here's a secret weapon — the MAGIC FORMULA TRIANGLE!
+      Draw a triangle. Write the letter D for Distance at the TOP.
+      Then write S for Speed on the bottom LEFT, and T for Time on the bottom RIGHT, with a times sign between them.
+      Now here's the magic: if you COVER UP what you want to find, the triangle shows you the formula!
+      Cover D? You get Speed times Time, so Distance equals Speed times Time!
+      Cover S? You get Distance divided by Time, so Speed equals Distance divided by Time!
+      Cover T? You get Distance divided by Speed, so Time equals Distance divided by Speed!
+      Memorise that triangle and you'll never forget the formulas!`
+  };
+  speak(scripts[id], btn);
+}
+
+// ═══════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════
+let animFrame = null;
+let carPos = 0;
+let carSpeed = 1.2;
+let animDistCovered = 0;
+let animTimeSec = 0;
+let animLastTS = null;
+
+function startCarAnim(speed) {
+  stopCarAnim();
+  carSpeed = speed;
+  carPos = 5;
+  animDistCovered = 0;
+  animTimeSec = 0;
+  animLastTS = null;
+
+  function loop(ts) {
+    if (!animLastTS) animLastTS = ts;
+    const dt = (ts - animLastTS) / 1000;
+    animLastTS = ts;
+
+    animTimeSec += dt;
+    animDistCovered += carSpeed * dt * 40; // scale for display
+
+    const car = document.getElementById('animCar');
+    const stageDist = document.getElementById('statDist');
+    const stageTime = document.getElementById('statTime');
+    const stageSpeed = document.getElementById('statSpeed');
+
+    if (car) {
+      carPos += carSpeed * dt * 55;
+      if (carPos > 100) carPos = 0;
+      car.style.left = carPos + '%';
+    }
+    if (stageDist) stageDist.textContent = Math.min(999, Math.round(animDistCovered));
+    if (stageTime) stageTime.textContent = animTimeSec.toFixed(1) + 's';
+
+    animFrame = requestAnimationFrame(loop);
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+function stopCarAnim() {
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+}
+
+// ═══════════════════════════════
+// LEARN TAB CONTENT
+// ═══════════════════════════════
+const concepts = {
+  speed: {
+    label: '💨 Speed',
+    animSpeed: 2.2,
+    title: 'What is Speed?',
+    color: '#e74c3c',
+    body: `Speed tells us <strong>how fast</strong> something is moving. It measures how much distance is covered in a certain amount of time. A bicycle goes about 10 mph. A race car can hit 200 mph!`,
+    formula: 'Speed = Distance ÷ Time',
+    example: 'Car travels 100 miles in 2 hours → Speed = 100 ÷ 2 = <strong>50 mph</strong>'
+  },
+  distance: {
+    label: '📏 Distance',
+    animSpeed: 1.5,
+    title: 'What is Distance?',
+    color: '#2980b9',
+    body: `Distance is <strong>how far</strong> something travels. To find it, we multiply speed by time. The further you go, the bigger the distance!`,
+    formula: 'Distance = Speed × Time',
+    example: 'Car goes 60 mph for 3 hours → Distance = 60 × 3 = <strong>180 miles</strong>'
+  },
+  time: {
+    label: '⏱️ Time',
+    animSpeed: 0.9,
+    title: 'What is Time?',
+    color: '#27ae60',
+    body: `Time is <strong>how long</strong> a journey takes. The faster you go, the less time you need. To find time, divide distance by speed.`,
+    formula: 'Time = Distance ÷ Speed',
+    example: 'Car travels 150 miles at 50 mph → Time = 150 ÷ 50 = <strong>3 hours</strong>'
+  },
+  triangle: {
+    label: '🔺 Triangle',
+    animSpeed: 1.6,
+    title: 'The Magic Formula Triangle',
+    color: '#8e44ad',
+    body: `The formula triangle is a handy trick! Write <strong>D</strong> on top, and <strong>S × T</strong> on the bottom. Cover up the one you want to find and the triangle shows you what to calculate!`,
+    formula: 'D on top  |  S × T on bottom',
+    example: 'Cover D → Distance = S × T<br>Cover S → Speed = D ÷ T<br>Cover T → Time = D ÷ S'
+  }
+};
+
+let activeTab = 'speed';
+
+function renderLearn() {
+  stopCarAnim();
+  stopSpeech();
+  document.getElementById('progressBar').style.width = '0%';
+
+  const tabsHTML = Object.entries(concepts).map(([key, c]) => `
+    <button class="tab-btn ${key === activeTab ? 'active' : ''}" onclick="switchTab('${key}')">${c.label}</button>
+  `).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="learn-header">
+      <h2>🎓 Learn Before You Race!</h2>
+      <p>Explore the 3 concepts, then take the quiz.</p>
+    </div>
+    <div class="tabs" id="tabsRow">${tabsHTML}</div>
+    <div id="conceptArea"></div>
+
+    <div class="learn-nav">
+      <button class="btn btn-ghost" onclick="renderWelcome()">← Back</button>
+      <button class="btn btn-primary" onclick="startQuiz()">I'm ready! Start the Quiz 🏁</button>
+    </div>
+  `;
+
+  renderTab(activeTab);
+}
+
+function switchTab(key) {
+  activeTab = key;
+  stopSpeech();
+  // update tab buttons
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    const keys = Object.keys(concepts);
+    btn.classList.toggle('active', keys[i] === key);
+  });
+  renderTab(key);
+}
+
+function renderTab(key) {
+  const c = concepts[key];
+  stopCarAnim();
+
+  let innerHTML = '';
+
+  if (key === 'triangle') {
+    innerHTML = `
+      <div class="concept-card">
+        <div class="anim-stage" style="background: linear-gradient(135deg,#2c1b47,#8e44ad);">
+          <div class="road">
+            <div class="road-line"></div>
+          </div>
+          <div class="car-anim" id="animCar">🏎️</div>
+          <div class="anim-stats">
+            <div class="stat-pill">D = S × T</div>
+          </div>
+        </div>
+        <div class="concept-body">
+          <h3>${c.title}</h3>
+          <p>${c.body}</p>
+          <div class="triangle-section" style="padding:0 0 0 0; margin-top:4px;">
+            <div class="triangle-container">
+              <div class="triangle-svg-wrap">
+                <svg width="130" height="120" viewBox="0 0 130 120">
+                  <polygon points="65,8 8,112 122,112" fill="#1a1a2e" stroke="#f39c12" stroke-width="2.5"/>
+                  <line x1="65" y1="8" x2="65" y2="112" stroke="#f39c12" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+                  <text x="65" y="52" text-anchor="middle" fill="#f39c12" font-size="22" font-weight="bold" font-family="Courier New">D</text>
+                  <text x="33" y="104" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Courier New">S</text>
+                  <text x="97" y="104" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Courier New">T</text>
+                  <text x="65" y="104" text-anchor="middle" fill="#f39c12" font-size="13" font-family="Arial">×</text>
+                </svg>
+              </div>
+              <div class="triangle-formulas">
+                <div class="t-formula" onclick="highlightFormula(this)">
+                  <div class="t-dot" style="background:#e74c3c"></div>
+                  <div>
+                    <div class="t-eq">D = S × T</div>
+                    <div class="t-label">Cover D → multiply</div>
+                  </div>
+                </div>
+                <div class="t-formula" onclick="highlightFormula(this)">
+                  <div class="t-dot" style="background:#2980b9"></div>
+                  <div>
+                    <div class="t-eq">S = D ÷ T</div>
+                    <div class="t-label">Cover S → D on top</div>
+                  </div>
+                </div>
+                <div class="t-formula" onclick="highlightFormula(this)">
+                  <div class="t-dot" style="background:#27ae60"></div>
+                  <div>
+                    <div class="t-eq">T = D ÷ S</div>
+                    <div class="t-label">Cover T → D on top</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+          <button class="audio-btn" onclick="toggleAudio('triangle', this)">
+            <span class="audio-icon">🔊</span> Hear it explained
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    innerHTML = `
+      <div class="concept-card">
+        <div class="anim-stage" style="background: linear-gradient(135deg,#0d1b2a,#1a3a5c);">
+          <div class="road">
+            <div class="road-line"></div>
+          </div>
+          <div class="car-anim" id="animCar">🏎️</div>
+          <div class="anim-stats">
+            <div class="stat-pill">📏 <span id="statDist">0</span> mi</div>
+            <div class="stat-pill">⏱️ <span id="statTime">0.0s</span></div>
+            <div class="stat-pill" style="color:#f39c12">💨 ${key === 'speed' ? 'FAST' : key === 'time' ? 'SLOW' : 'MEDIUM'}</div>
+          </div>
+        </div>
+        <div class="concept-body">
+          <h3>${c.title}</h3>
+          <p>${c.body}</p>
+          <div class="formula-chip">${c.formula}</div>
+          <p style="font-size:0.85rem; color:#555; background:#f9f9f9; padding:10px 12px; border-radius:8px; margin-bottom:12px;">
+            💡 <strong>Example:</strong> ${c.example}
+          </p>
+          <button class="audio-btn" onclick="toggleAudio('${key}', this)">
+            <span class="audio-icon">🔊</span> Hear it explained
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('conceptArea').innerHTML = innerHTML;
+  startCarAnim(c.animSpeed);
+}
+
+function highlightFormula(el) {
+  document.querySelectorAll('.t-formula').forEach(f => f.classList.remove('highlighted'));
+  el.classList.add('highlighted');
+}
+
+// ═══════════════════════════════
+// WELCOME SCREEN
+// ═══════════════════════════════
+function renderWelcome() {
+  stopCarAnim(); stopSpeech();
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('mainContent').innerHTML = `
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="font-size:3.5rem; margin-bottom:10px;">🏎️</div>
+      <div class="welcome-title">Welcome to Race Academy!</div>
+      <div class="welcome-sub">Learn about Speed, Time &amp; Distance — then prove you're a champion!</div>
+    </div>
+    <div class="path-cards">
+      <div class="path-card primary" onclick="renderLearn()">
+        <span class="card-icon">📚</span>
+        <h3>Learn First</h3>
+        <p>See animated explanations &amp; hear audio lessons for each concept — then take the quiz!</p>
+      </div>
+      <div class="path-card" onclick="startQuiz()">
+        <span class="card-icon">🏁</span>
+        <h3>Jump to Quiz</h3>
+        <p>Already know your stuff? Skip straight to the 10-question race challenge!</p>
+      </div>
+    </div>
+    <div style="background:#fff8f0; border:2px solid #f39c12; border-radius:12px; padding:16px 20px;">
+      <div style="font-weight:800; color:#1a1a2e; margin-bottom:10px; font-size:0.95rem;">📐 The 3 Key Formulas</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:140px; background:white; border-radius:10px; padding:10px 14px; text-align:center;">
+          <div style="font-size:1.2rem; margin-bottom:4px;">📏</div>
+          <div style="font-family:'Courier New',monospace; font-size:0.85rem; font-weight:700; color:#c0392b;">D = S × T</div>
+          <div style="font-size:0.75rem; color:#888; margin-top:2px;">Distance</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:white; border-radius:10px; padding:10px 14px; text-align:center;">
+          <div style="font-size:1.2rem; margin-bottom:4px;">💨</div>
+          <div style="font-family:'Courier New',monospace; font-size:0.85rem; font-weight:700; color:#2980b9;">S = D ÷ T</div>
+          <div style="font-size:0.75rem; color:#888; margin-top:2px;">Speed</div>
+        </div>
+        <div style="flex:1; min-width:140px; background:white; border-radius:10px; padding:10px 14px; text-align:center;">
+          <div style="font-size:1.2rem; margin-bottom:4px;">⏱️</div>
+          <div style="font-family:'Courier New',monospace; font-size:0.85rem; font-weight:700; color:#27ae60;">T = D ÷ S</div>
+          <div style="font-size:0.75rem; color:#888; margin-top:2px;">Time</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════
+// QUESTIONS
+// ═══════════════════════════════
+const questions = [
+  { id:1, type:'numeric', scene:'🏎️ Speedster Sam drives his race car at 60 miles per hour.', question:'If he drives for 3 hours, how far does he travel?', answer:'180', unit:'miles', concept:'Distance',
+    hints:['Remember the formula: Distance = Speed × Time. You have the speed (60) and the time (3).','Speed = 60, Time = 3. Multiply them: 60 × 3 = ?'],
+    steps:[{t:'Use: Distance = Speed × Time'},{t:'Speed = 60, Time = 3'},{t:'Distance = 60 × 3 = <span class="hl">180 miles</span>'}] },
+  { id:2, type:'numeric', scene:'🏁 Rally driver Ravi completes a 240-mile race.', question:'If he drove at a constant 80 mph, how long did the race take?', answer:'3', unit:'hours', concept:'Time',
+    hints:['Use: Time = Distance ÷ Speed. You know the distance (240) and the speed (80).','Distance = 240, Speed = 80. Try: 240 ÷ 80 = ?'],
+    steps:[{t:'Use: Time = Distance ÷ Speed'},{t:'Distance = 240, Speed = 80'},{t:'Time = 240 ÷ 80 = <span class="hl">3 hours</span>'}] },
+  { id:3, type:'numeric', scene:'💨 Turbo the racing car travels 150 miles in 2 hours.', question:'What was Turbo\'s average speed?', answer:'75', unit:'mph', concept:'Speed',
+    hints:['Use: Speed = Distance ÷ Time. You know how far (150 miles) and how long (2 hours).','Distance = 150, Time = 2. Try: 150 ÷ 2 = ?'],
+    steps:[{t:'Use: Speed = Distance ÷ Time'},{t:'Distance = 150, Time = 2'},{t:'Speed = 150 ÷ 2 = <span class="hl">75 mph</span>'}] },
+  { id:4, type:'numeric', scene:'🚗 Marco drives at 90 mph and Nico drives at 60 mph.', question:'After 2 hours, how many miles AHEAD is Marco compared to Nico?', answer:'60', unit:'miles', concept:'Difference',
+    hints:['First find each car\'s distance using Distance = Speed × Time. Marco: 90 × 2. Nico: 60 × 2.','Marco travels 180 miles, Nico travels 120 miles. How much further did Marco go?'],
+    steps:[{t:'Marco: 90 × 2 = 180 miles'},{t:'Nico: 60 × 2 = 120 miles'},{t:'Difference = 180 − 120 = <span class="hl">60 miles</span>'}] },
+  { id:5, type:'numeric', scene:'🏆 In a 3-hour race, Car A travels 210 miles and Car B travels 180 miles.', question:'How much faster (in mph) is Car A than Car B?', answer:'10', unit:'mph', concept:'Speed',
+    hints:['Find each car\'s speed first using Speed = Distance ÷ Time. Both raced for 3 hours.','Car A: 210 ÷ 3 = 70 mph. Car B: 180 ÷ 3 = 60 mph. Now subtract.'],
+    steps:[{t:'Speed A = 210 ÷ 3 = 70 mph'},{t:'Speed B = 180 ÷ 3 = 60 mph'},{t:'Difference = 70 − 60 = <span class="hl">10 mph</span>'}] },
+  { id:6, type:'variable', scene:'🏎️ Driver Danny races at <strong>s</strong> miles per hour.', question:'If Danny drives for <strong>t</strong> hours, how far does he travel?', answer:'s*t', accepted:['s*t','s×t','s·t','t*s','t×s','t·s','st'], display:'s × t', unit:'miles', concept:'Distance',
+    hint:'Type: s*t  (use * or × for multiply)',
+    hints:['Formula: Distance = Speed × Time. Speed is the letter s, and Time is the letter t.','Just multiply s and t. Type it as: s*t'],
+    steps:[{t:'Formula: Distance = Speed × Time'},{t:'Speed = s, Time = t'},{t:'Distance = <span class="hl">s × t</span>'}] },
+  { id:7, type:'variable', scene:'🏁 Rosa drives <strong>d</strong> miles at <strong>s</strong> miles per hour.', question:'How long did her race take?', answer:'d/s', accepted:['d/s','d÷s'], display:'d / s', unit:'hours', concept:'Time',
+    hint:'Type: d/s  (use / for divide)',
+    hints:['Formula: Time = Distance ÷ Speed. Distance is d, Speed is s.','Divide d by s. Type it as: d/s'],
+    steps:[{t:'Formula: Time = Distance ÷ Speed'},{t:'Distance = d, Speed = s'},{t:'Time = <span class="hl">d / s</span>'}] },
+  { id:8, type:'variable', scene:'💨 Car Flash races at <strong>s</strong> mph. After 3 hours, rival Car Bolt has already covered <strong>90 miles</strong>.', question:'How many miles ahead is Car Flash at that point?', answer:'3s-90', accepted:['3s-90','3*s-90','s*3-90','3s−90'], display:'3s − 90', unit:'miles', concept:'Difference',
+    hint:'Flash distance = s × 3. Bolt distance = 90. Subtract. Try: 3s-90',
+    hints:['Car Flash travels s × 3 = 3s miles. Car Bolt has traveled 90 miles. Now subtract.','Flash: 3s miles. Bolt: 90 miles. The gap is 3s − 90. Type: 3s-90'],
+    steps:[{t:'Car Flash: s × 3 = 3s miles'},{t:'Car Bolt: 90 miles (given)'},{t:'Flash ahead by: 3s − 90 = <span class="hl">3s − 90</span>'}] },
+  { id:9, type:'variable', scene:'🚗 Driver Max goes at <strong>80 mph</strong> for <strong>t hours</strong>. Driver Leo goes at <strong>50 mph</strong> for the same <strong>t hours</strong>.', question:'How much further does Max travel than Leo?', answer:'30t', accepted:['30t','30*t','t*30','80t-50t','80*t-50*t','t*80-t*50'], display:'30t', unit:'miles', concept:'Difference',
+    hint:'Max distance = 80 × t. Leo distance = 50 × t. Subtract. Try: 80t-50t or simplify to 30t',
+    hints:['Max travels 80 × t = 80t miles. Leo travels 50 × t = 50t miles. Find the difference.','Max: 80t miles. Leo: 50t miles. Difference = 80t − 50t. Both 80t-50t and 30t are accepted!'],
+    steps:[{t:'Max: 80 × t = 80t miles'},{t:'Leo: 50 × t = 50t miles'},{t:'Difference = 80t − 50t = <span class="hl">30t</span>'}] },
+  { id:10, type:'variable', scene:'🏆 A race car zooms at <strong>s mph</strong> for <strong>3 hours</strong>, then slows to <strong>40 mph</strong> for <strong>2 more hours</strong>.', question:'What is the total distance of the whole race?', answer:'3s+80', accepted:['3s+80','80+3s','3*s+80','80+3*s','3s+2*40','2*40+3s'], display:'3s + 80', unit:'miles', concept:'Distance',
+    hint:'Work out each part separately, then add. First part: s × 3. Second part: 40 × 2.',
+    hints:['Find each part\'s distance. Part 1: s × 3 miles. Part 2: 40 × 2 = 80 miles. Then add them.','Part 1: 3s miles. Part 2: 40 × 2 = 80 miles. Total = 3s + 80. Type: 3s+80'],
+    steps:[{t:'Part 1: s × 3 = 3s miles'},{t:'Part 2: 40 × 2 = 80 miles'},{t:'Total = 3s + 80 = <span class="hl">3s + 80</span>'}] }
+];
+
+// ═══════════════════════════════
+// QUIZ STATE
+// ═══════════════════════════════
+let currentQ = 0, score = 0, results = [], answered = false, attemptCount = 0;
+
+function norm(s) {
+  return s.toLowerCase().replace(/\s+/g,'').replace(/[×·]/g,'*').replace(/[÷]/g,'/').replace(/−/g,'-');
+}
+function checkAns(q, val) {
+  const n = norm(val.trim());
+  if (q.type==='numeric') return n === q.answer;
+  return (q.accepted||[q.answer]).map(norm).includes(n);
+}
+
+function startQuiz() {
+  stopCarAnim(); stopSpeech();
+  currentQ = 0; score = 0; results = []; answered = false; attemptCount = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false; attemptCount = 0;
+  const q = questions[currentQ];
+  document.getElementById('progressBar').style.width = ((currentQ/questions.length)*100)+'%';
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="q-num">Question ${currentQ+1} of ${questions.length} &nbsp;·&nbsp; ${q.concept}</div>
+    <div class="q-scene">${q.scene}</div>
+    <div class="q-ask">❓ ${q.question}</div>
+    <div style="margin-bottom:18px;">
+      <label class="answer-label">Your answer${q.unit ? ' (just the number or expression — no units needed)' : ''}:</label>
+      <input class="answer-input" id="ansInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false"
+        placeholder="${q.type==='numeric' ? 'Type a number…' : 'Type your expression…'}"
+        onkeydown="if(event.key==='Enter')submitAnswer()"/>
+      ${q.hint ? `<div class="hint-text">💡 ${q.hint}</div>` : ''}
+    </div>
+    <div id="feedbackArea"></div>
+    <div id="actionArea">
+      <button class="btn btn-primary" onclick="submitAnswer()" style="width:100%">Check My Answer 🏁</button>
+    </div>
+  `;
+  setTimeout(()=>{ const i=document.getElementById('ansInput'); if(i) i.focus(); }, 80);
+}
+
+function submitAnswer() {
+  if (answered) return;
+  const q = questions[currentQ];
+  const inp = document.getElementById('ansInput');
+  const val = (inp ? inp.value : '').trim();
+  if (!val) { if(inp){ inp.style.borderColor='#e74c3c'; inp.placeholder='Please type an answer!'; } return; }
+
+  const correct = checkAns(q, val);
+  attemptCount++;
+
+  if (correct) {
+    // Got it right!
+    answered = true;
+    score++;
+    results.push({q, val, correct:true, attempts:attemptCount});
+    if (inp) { inp.disabled=true; inp.style.borderColor='#27ae60'; }
+    showFinalFeedback(q, true);
+
+  } else if (attemptCount >= 3) {
+    // Used all 3 attempts
+    answered = true;
+    results.push({q, val, correct:false, attempts:attemptCount});
+    if (inp) { inp.disabled=true; inp.style.borderColor='#e74c3c'; }
+    showFinalFeedback(q, false);
+
+  } else {
+    // Wrong but still has attempts left — show a hint
+    if (inp) { inp.style.borderColor='#f39c12'; }
+    const attemptsLeft = 3 - attemptCount;
+    const hint = q.hints ? q.hints[attemptCount - 1] : (q.hint || 'Think about which formula to use!');
+    const emoji = attemptCount === 1 ? '🤔' : '💪';
+    document.getElementById('feedbackArea').innerHTML = `
+      <div class="feedback-box wrong" style="border-color:#f4a100; background:#fffbf0;">
+        <div class="fb-header" style="color:#b7770d;">
+          <span class="fb-icon">${emoji}</span>
+          Not quite — ${attemptsLeft} more ${attemptsLeft === 1 ? 'chance' : 'chances'}!
+        </div>
+        <div style="font-size:0.9rem; color:#555; margin-top:6px; padding:8px 10px; background:rgba(244,161,0,0.1); border-radius:8px;">
+          <strong>💡 Hint ${attemptCount}:</strong> ${hint}
+        </div>
+      </div>
+    `;
+    document.getElementById('feedbackArea').scrollIntoView({behavior:'smooth', block:'nearest'});
+    // Clear input and refocus for retry
+    setTimeout(() => {
+      if (inp) { inp.value=''; inp.style.borderColor='#ddd'; inp.focus(); }
+    }, 300);
+  }
+}
+
+function showFinalFeedback(q, correct) {
+  const stepsHTML = q.steps.map((s,i)=>`
+    <div class="step-row">
+      <div class="step-circle">${i+1}</div>
+      <div>${s.t}</div>
+    </div>`).join('');
+
+  let headerMsg;
+  if (correct) {
+    if (attemptCount === 1) headerMsg = 'Perfect — got it first try! 🌟';
+    else if (attemptCount === 2) headerMsg = 'Got it on the second try — nice work!';
+    else headerMsg = 'Got it on the third try — you figured it out!';
+  } else {
+    headerMsg = `The answer is <span class="hl">${q.display||q.answer}</span>`;
+  }
+
+  document.getElementById('feedbackArea').innerHTML = `
+    <div class="feedback-box ${correct?'correct':'wrong'}">
+      <div class="fb-header">
+        <span class="fb-icon">${correct?'🎉':'🤔'}</span>
+        ${headerMsg}
+      </div>
+      <div class="steps-title">Step-by-step solution:</div>
+      ${stepsHTML}
+    </div>
+  `;
+
+  const isLast = currentQ === questions.length-1;
+  document.getElementById('actionArea').innerHTML = `
+    <button class="btn btn-primary" style="width:100%" onclick="${isLast?'showScore()':'nextQuestion()'}">
+      ${isLast ? '🏆 See My Final Score!' : 'Next Question →'}
+    </button>
+  `;
+  document.getElementById('feedbackArea').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function nextQuestion() { currentQ++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function showScore() {
+  stopSpeech();
+  document.getElementById('progressBar').style.width = '100%';
+  let trophy='🏁', msg='Keep practicing — you\'ll get there! 🚗';
+  if(score===10){trophy='🥇';msg='PERFECT SCORE! You\'re a Formula 1 legend! 🔥';}
+  else if(score>=8){trophy='🏆';msg='Amazing work! You\'re on the podium! 🎉';}
+  else if(score>=6){trophy='🥈';msg='Great effort! A bit more practice and you\'ll nail it!';}
+  else if(score>=4){trophy='🥉';msg='Good start! Review the formulas and try again.';}
+
+  const bdHTML = results.map((r,i)=>{
+    let badge, label;
+    if (r.correct && r.attempts===1) { badge='✅'; label='First try!'; }
+    else if (r.correct && r.attempts===2) { badge='🟡'; label='2nd attempt'; }
+    else if (r.correct && r.attempts===3) { badge='🟠'; label='3rd attempt'; }
+    else { badge='❌'; label='Not solved'; }
+    return `<div class="bd-row">
+      <span>Q${i+1}: ${r.q.concept} ${r.q.type==='variable'?'(algebra)':''}</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#888;">${label} ${badge}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="score-wrap">
+      <span class="trophy-big">${trophy}</span>
+      <div class="score-big">${score}/10</div>
+      <div class="score-of">questions correct</div>
+      <div class="score-msg">${msg}</div>
+      <div class="breakdown"><h4>Question breakdown</h4>${bdHTML}</div>
+      <div style="display:flex; gap:10px; flex-direction:column; margin-top:8px;">
+        <button class="btn btn-primary" onclick="startQuiz()">🔄 Race Again!</button>
+        <button class="btn btn-ghost" onclick="renderLearn()">📚 Review the Concepts</button>
+      </div>
+    </div>
+  `;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+// Pre-load voices (some browsers need this)
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+renderWelcome();
+</script>
+</body>
+</html>
